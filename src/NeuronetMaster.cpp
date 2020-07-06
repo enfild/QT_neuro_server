@@ -14,7 +14,7 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
 
     watcher.addPath("C:/neuronet/Temp_frame/0.png");
     TF_init();
-    connect(&watcher, &QFileSystemWatcher::fileChanged, this, [=]() {NeuronetMaster::TF_processing();});
+    connect(&watcher, &QFileSystemWatcher::fileChanged, this, [=]() {NeuronetMaster::TF_processing(false);});
 
 }
 
@@ -106,45 +106,12 @@ void NeuronetMaster::TF_init()
                 "num_detections = detection_graph.get_tensor_by_name('num_detections:0')	\n"\
                 );
 
-    PyRun_SimpleString(
-                "start_time = datetime.now()	\n"\
-                "image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
-                "image_expanded = np.expand_dims(image, axis = 0)	\n"\
-                "print(datetime.now() - start_time)	\n"\
-                "(boxes, scores, classes, num) = sess.run(	\n"\
-                "	[detection_boxes, detection_scores, detection_classes, num_detections],	\n"\
-                "	feed_dict = { image_tensor: image_expanded })	\n"\
-                "print(datetime.now() - start_time)	\n"\
-                "start_time_printer = datetime.now()	\n"\
-                "scores = np.squeeze(scores)	\n"\
-                "boxes = np.squeeze(boxes)	\n"\
-                "classes = np.squeeze(classes)	\n"\
-                "max_boxes_to_draw = boxes.shape[0]	\n"\
-                "height = image.shape[0]	\n"\
-                "width = image.shape[1]	\n"\
-                "channels = image.shape[2]	\n"\
-                "for i in range(min(max_boxes_to_draw, boxes.shape[0])) :	\n"\
-                "	if scores is None or scores[i] > 0.5:	\n"\
-                "		if classes[i] == 2 :	\n"\
-                "			box = tuple(boxes[i].tolist())	\n"\
-                "			ymin, xmin, ymax, xmax = box	\n"\
-                "			start_point = (int(xmin * height), int(ymin * width))	\n"\
-                "			end_point = (int(xmax * height), int(ymax * width))	\n"\
-                "			color = (0, 255, 0)	\n"\
-                "			center_coordinates = (int((xmax*height + xmin*height) / 2), int((ymax*width + ymin*width) / 2))	\n"\
-                "			print(center_coordinates)	\n"\
-                "			image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
-                "print('Time of drawing: ')	\n"\
-                "print(datetime.now() - start_time_printer)	\n"\
-                "print(datetime.now() - start_time)	\n"\
-                "cv2.imshow('GUI', image)	\n"\
-                "print('PROCESSING IS DONE')	\n"\
-                "print(datetime.now() - start_time)	\n"\
-                );
+    NeuronetMaster::TF_processing(true);
 
     translation = PyDict_GetItemString(main_dict, "center_coordinates");
     QString points = pointReader(translation);
     parserString(points);
+
     qInfo() << "INIT GRAPH DONE";
 }
 
@@ -160,30 +127,43 @@ QString NeuronetMaster::pointReader(PyObject *ItemString)
 
 void NeuronetMaster::parserString(QString inString)
 {
-
     inString.remove(0, 1);
     inString.chop(1);
-
-    x = inString.split(",")[0].toInt();
-    y = inString.split(",")[1].toInt();
+    countCath = inString.split(",").count() / numCoordinates;
+    qDebug() << countCath << "колво катетеров";
+    for(int i =0; i <= countCath * numCoordinates; i += numCoordinates){
+        x = inString.split(",")[0].toInt();
+        y = inString.split(",")[1].toInt();
+    }
     qDebug() << y;
 }
 
-void NeuronetMaster::TF_processing()
+bool NeuronetMaster::TF_processing(bool init)
 {
     sleep();
     PyRun_SimpleString(
                 "print('TF_PROCESSIVNG')	\n"\
                 "start_time = datetime.now()	\n"\
-                "image = cv2.imread(PATH_TO_IMAGE)	\n"\
+                );
+    if(!init)
+    {
+        PyRun_SimpleString(
+                    "image = cv2.imread(PATH_TO_IMAGE)	\n"\
+                    );
+    }
+    else
+    {
+        PyRun_SimpleString(
+                    "image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
+                    );
+    }
+    PyRun_SimpleString(
                 "image = cv2.resize(image, (1024, 1024))	\n"\
                 "image_expanded = np.expand_dims(image, axis = 0)	\n"\
                 "print(datetime.now() - start_time)	\n"\
                 "(boxes, scores, classes, num) = sess.run(	\n"\
                 "	[detection_boxes, detection_scores, detection_classes, num_detections],	\n"\
                 "	feed_dict = { image_tensor: image_expanded })	\n"\
-                "print(datetime.now() - start_time)	\n"\
-                "start_time_printer = datetime.now()	\n"\
                 "scores = np.squeeze(scores)	\n"\
                 "boxes = np.squeeze(boxes)	\n"\
                 "classes = np.squeeze(classes)	\n"\
@@ -203,11 +183,12 @@ void NeuronetMaster::TF_processing()
                 "			print(center_coordinates)	\n"\
                 "			image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
                 );
+    Shower();
+}
 
+void NeuronetMaster::Shower()
+{
     PyRun_SimpleString(
-                "print('Time of drawing: ')	\n"\
-                "print(datetime.now() - start_time_printer)	\n"\
-                "print(datetime.now() - start_time)	\n"\
                 "NumbFrame += 1	\n"\
                 "cv2.imshow('GUI', image)	\n"\
                 "os.remove(PATH_TO_IMAGE)	\n"\
@@ -215,5 +196,4 @@ void NeuronetMaster::TF_processing()
                 "print(datetime.now() - start_time)	\n"\
                 );
 }
-
 

@@ -13,15 +13,15 @@
 #include "QFileSystemWatcher"
 #include <QtNetwork/QHostAddress>
 #include <QTimer>
-#include <QRegularExpression>
 
 #define slots
 
 namespace  {
-    int countCath;
-    // координаты катетера
-    int x;
-    int y;
+int countCath;
+// координаты катетера
+const int numCoordinates = 2;
+int x;
+int y;
 }
 
 class NeuronetMaster: public QObject
@@ -33,6 +33,9 @@ public:
     NeuronetMaster();
 
     ~NeuronetMaster();
+
+    /// \ Инициализация Графа, загрузка его в память
+    void TF_init();
 
 private:
     PyObject *pModule; //create main module
@@ -52,11 +55,11 @@ private:
 
     int server_status;
 
-    /// \ Инициализация Графа, загрузка его в память
-    void TF_init();
+    /// \ Обработка кадра инструментами Питона
+    bool TF_processing(bool init);
 
     /// \ Обработка кадра инструментами Питона
-    void TF_processing();
+    static void Shower();
 
     ///\ подстраховка
     static bool TF_done();
