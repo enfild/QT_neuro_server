@@ -108,7 +108,7 @@ void NeuronetMaster::TF_init()
 
     NeuronetMaster::TF_processing(true);
 
-    translation = PyDict_GetItemString(main_dict, "center_coordinates");
+    translation = PyDict_GetItemString(main_dict, "listCoordinates");
     QString points = pointReader(translation);
     parserString(points);
 
@@ -121,7 +121,7 @@ QString NeuronetMaster::pointReader(PyObject *ItemString)
     PyObject* str = PyUnicode_AsUTF8String(repr);
     const char *bytes = PyBytes_AS_STRING(str);
     QString out = QString::fromUtf8(bytes);
-    qDebug() << out;
+    qDebug() << out << "POINT READER";
     return out;
 }
 
@@ -129,13 +129,17 @@ void NeuronetMaster::parserString(QString inString)
 {
     inString.remove(0, 1);
     inString.chop(1);
+    inString.remove(QRegExp("[()]+"));
+
+    qDebug() << inString << "CROPED STRING";
     countCath = inString.split(",").count() / numCoordinates;
     qDebug() << countCath << "колво катетеров";
-    for(int i =0; i <= countCath * numCoordinates; i += numCoordinates){
-        x = inString.split(",")[0].toInt();
-        y = inString.split(",")[1].toInt();
+    for(int i =0; i < countCath * numCoordinates; i += numCoordinates){
+        x = inString.split(",")[0 + i].toInt();
+        y = inString.split(",")[1 + i].toInt();
+        qDebug() << y;
     }
-    qDebug() << y;
+//    qDebug() << y;
 }
 
 bool NeuronetMaster::TF_processing(bool init)
@@ -171,6 +175,7 @@ bool NeuronetMaster::TF_processing(bool init)
                 "height = image.shape[0]	\n"\
                 "width = image.shape[1]	\n"\
                 "channels = image.shape[2]	\n"\
+                "listCoordinates = []	\n"\
                 "for i in range(min(max_boxes_to_draw, boxes.shape[0])) :	\n"\
                 "	if scores is None or scores[i] > 0.5:	\n"\
                 "		if classes[i] == 2 :	\n"\
@@ -182,6 +187,8 @@ bool NeuronetMaster::TF_processing(bool init)
                 "			center_coordinates = (int((xmax*height + xmin*height) / 2), int((ymax*width + ymin*width) / 2))	\n"\
                 "			print(center_coordinates)	\n"\
                 "			image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
+                "			listCoordinates.append(center_coordinates)	\n"\
+                "print(listCoordinates)	\n"\
                 );
     Shower();
 }
