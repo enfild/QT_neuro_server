@@ -1,7 +1,9 @@
 #define QT_NO_KEYWORDS
 #undef slots
 #include "include/NeuronetMaster.h"
+//#include <QtNetwork/QUdpSocket>
 #define slots
+#include <QtNetwork/QUdpSocket>
 
 NeuronetMaster::NeuronetMaster() : QObject(nullptr)
 {
@@ -12,9 +14,13 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
     pModule = PyImport_AddModule("__main__"); //create main module
     main_dict   = PyModule_GetDict(pModule);
 
-    watcher.addPath("C:/neuronet/Temp_frame/0.png");
+    //    watcher.addPath("C:/neuronet/Temp_frame/0.png");
     TF_init();
-    connect(&watcher, &QFileSystemWatcher::fileChanged, this, [=]() {NeuronetMaster::TF_processing(false);});
+    //    QObject::connect(&watcher, &QFileSystemWatcher::fileChanged, this, [=]() {NeuronetMaster::TF_processing(false);});
+    NeuronetMaster::connectSocket();
+
+
+
 
 }
 
@@ -41,20 +47,45 @@ bool NeuronetMaster::TF_done()
     return true;
 }
 
-//bool NeuronetMaster::connectSocket()
-//{
-////    m_sockets->close();
-////    m_server->close();
-////     m_server = new QTcpServer(this);
-//     connect(m_server, SIGNAL(newConnection()), this, SLOT(newuser()));
-//     if (!m_server->listen(QHostAddress::Any, 33333) && server_status==0) {
-//             qDebug() <<  QObject::tr("Unable to start the server: %1.").arg(m_server->errorString());
-//         } else {
-//             server_status=1;
-//             qDebug() << QString::fromUtf8("Сервер запущен!");
-//         }
-//     return true;
-//}
+void NeuronetMaster::connectSocket()
+{
+    udpSocket.bind(QHostAddress::LocalHost, 7755);
+    QObject::connect(&udpSocket, &QUdpSocket::readyRead, this, [=]() {reciveSocket();});
+}
+
+bool NeuronetMaster::reciveSocket(){
+    bool result;
+    qDebug() << "Voslo";
+    if(udpSocket.bytesAvailable()){
+        qDebug() << "BYTES AVAILABLE";
+    }
+    while (udpSocket.hasPendingDatagrams()) {
+        qDebug() << "HAS PENDING";
+        QByteArray datagram;
+        datagram.resize(udpSocket.pendingDatagramSize());
+        result = udpSocket.readDatagram(datagram.data(), datagram.size());
+        qDebug() << "Message receive: " << datagram.data();
+    }
+    return result;
+}
+
+bool NeuronetMaster::sendSocket(){
+
+    QByteArray Data; // Message for send
+    Data += "SAMP";
+    Data += QString( 93 );
+    Data += QString( 119 );
+    Data += QString( 26 );
+    Data += QString( 214 );
+    Data += QString(7777 & 0xFF);
+    Data += QString(7777 >> 8 & 0xFF);
+    Data.append("i");
+
+    bool result = udpSocket.writeDatagram(Data, QHostAddress::LocalHost, 7755);
+    return result;
+}
+
+
 
 void NeuronetMaster::TF_init()
 {
@@ -108,9 +139,9 @@ void NeuronetMaster::TF_init()
 
     NeuronetMaster::TF_processing(true);
 
-    translation = PyDict_GetItemString(main_dict, "listCoordinates");
-    QString points = pointReader(translation);
-    parserString(points);
+    //    translation = PyDict_GetItemString(main_dict, "listCoordinates");
+    //    QString points = pointReader(translation);
+    //    parserString(points);
 
     qInfo() << "INIT GRAPH DONE";
 }
@@ -139,7 +170,7 @@ void NeuronetMaster::parserString(QString inString)
         y = inString.split(",")[1 + i].toInt();
         qDebug() << y;
     }
-//    qDebug() << y;
+    //    qDebug() << y;
 }
 
 bool NeuronetMaster::TF_processing(bool init)
@@ -190,6 +221,11 @@ bool NeuronetMaster::TF_processing(bool init)
                 "			listCoordinates.append(center_coordinates)	\n"\
                 "print(listCoordinates)	\n"\
                 );
+
+    translation = PyDict_GetItemString(main_dict, "listCoordinates");
+    QString points = pointReader(translation);
+    parserString(points);
+
     Shower();
 }
 

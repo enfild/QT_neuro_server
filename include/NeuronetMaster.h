@@ -7,9 +7,7 @@
 #include <QDebug>
 #include <QObject>
 #include <QEventLoop>
-#include <QtNetwork/QTcpSocket>
 #include <QtNetwork/QUdpSocket>
-#include <QtNetwork/QTcpServer>
 #include "QFileSystemWatcher"
 #include <QtNetwork/QHostAddress>
 #include <QTimer>
@@ -17,6 +15,7 @@
 #define slots
 
 namespace  {
+// колво катетеров
 int countCath;
 // координаты катетера
 const int numCoordinates = 2;
@@ -29,6 +28,8 @@ class NeuronetMaster: public QObject
     Q_OBJECT
 
 public:
+    // открытая реализация
+//        NeuronetMaster *q_ptr;
 
     NeuronetMaster();
 
@@ -49,9 +50,7 @@ private:
     QFileSystemWatcher watcher;
 
     /// \ сокет TCP
-    QScopedPointer<QTcpSocket> *m_sockets;
-
-    QScopedPointer<QTcpServer> *m_server;
+    QUdpSocket udpSocket;
 
     int server_status;
 
@@ -71,15 +70,15 @@ private:
     void parserString(QString inString);
 
     /// \ Инициализация сокета
-    bool connectSocket();
+    void connectSocket();
 
     /// \ прием
-    static void reciveSocket();
+    bool reciveSocket();
 
     void sleep();
 
     /// \ отправка
-    static void sendSocket();
+    bool sendSocket();
 
 
 };
