@@ -1,9 +1,7 @@
 #define QT_NO_KEYWORDS
 #undef slots
 #include "include/NeuronetMaster.h"
-//#include <QtNetwork/QUdpSocket>
 #define slots
-#include <QtNetwork/QUdpSocket>
 
 NeuronetMaster::NeuronetMaster() : QObject(nullptr)
 {
@@ -14,14 +12,7 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
     pModule = PyImport_AddModule("__main__"); //create main module
     main_dict   = PyModule_GetDict(pModule);
 
-    //    watcher.addPath("C:/neuronet/Temp_frame/0.png");
     TF_init();
-    //    QObject::connect(&watcher, &QFileSystemWatcher::fileChanged, this, [=]() {NeuronetMaster::TF_processing(false);});
-    NeuronetMaster::connectSocket();
-
-
-
-
 }
 
 NeuronetMaster::~NeuronetMaster()
@@ -42,49 +33,10 @@ bool NeuronetMaster::TF_done()
 {
     qInfo() << "TF_done";
     PyRun_SimpleString("cv2.destroyWindow('GUI')	\n");
-    PyRun_SimpleString("sys.exit()");
+    //    PyRun_SimpleString("sys.exit()");
     // Py_Finalize();
     return true;
 }
-
-void NeuronetMaster::connectSocket()
-{
-    udpSocket.bind(QHostAddress::LocalHost, 7755);
-    QObject::connect(&udpSocket, &QUdpSocket::readyRead, this, [=]() {reciveSocket();});
-}
-
-bool NeuronetMaster::reciveSocket(){
-    bool result;
-    qDebug() << "Voslo";
-    if(udpSocket.bytesAvailable()){
-        qDebug() << "BYTES AVAILABLE";
-    }
-    while (udpSocket.hasPendingDatagrams()) {
-        qDebug() << "HAS PENDING";
-        QByteArray datagram;
-        datagram.resize(udpSocket.pendingDatagramSize());
-        result = udpSocket.readDatagram(datagram.data(), datagram.size());
-        qDebug() << "Message receive: " << datagram.data();
-    }
-    return result;
-}
-
-bool NeuronetMaster::sendSocket(){
-
-    QByteArray Data; // Message for send
-    Data += "SAMP";
-    Data += QString( 93 );
-    Data += QString( 119 );
-    Data += QString( 26 );
-    Data += QString( 214 );
-    Data += QString(7777 & 0xFF);
-    Data += QString(7777 >> 8 & 0xFF);
-    Data.append("i");
-
-    bool result = udpSocket.writeDatagram(Data, QHostAddress::LocalHost, 7755);
-    return result;
-}
-
 
 
 void NeuronetMaster::TF_init()
@@ -139,38 +91,8 @@ void NeuronetMaster::TF_init()
 
     NeuronetMaster::TF_processing(true);
 
-    //    translation = PyDict_GetItemString(main_dict, "listCoordinates");
-    //    QString points = pointReader(translation);
-    //    parserString(points);
 
     qInfo() << "INIT GRAPH DONE";
-}
-
-QString NeuronetMaster::pointReader(PyObject *ItemString)
-{
-    PyObject* repr = PyObject_Repr(ItemString);
-    PyObject* str = PyUnicode_AsUTF8String(repr);
-    const char *bytes = PyBytes_AS_STRING(str);
-    QString out = QString::fromUtf8(bytes);
-    qDebug() << out << "POINT READER";
-    return out;
-}
-
-void NeuronetMaster::parserString(QString inString)
-{
-    inString.remove(0, 1);
-    inString.chop(1);
-    inString.remove(QRegExp("[()]+"));
-
-    qDebug() << inString << "CROPED STRING";
-    countCath = inString.split(",").count() / numCoordinates;
-    qDebug() << countCath << "колво катетеров";
-    for(int i =0; i < countCath * numCoordinates; i += numCoordinates){
-        x = inString.split(",")[0 + i].toInt();
-        y = inString.split(",")[1 + i].toInt();
-        qDebug() << y;
-    }
-    //    qDebug() << y;
 }
 
 bool NeuronetMaster::TF_processing(bool init)
@@ -238,5 +160,32 @@ void NeuronetMaster::Shower()
                 "print('PROCESSING IS DONE')	\n"\
                 "print(datetime.now() - start_time)	\n"\
                 );
+}
+
+QString NeuronetMaster::pointReader(PyObject *ItemString)
+{
+    PyObject* repr = PyObject_Repr(ItemString);
+    PyObject* str = PyUnicode_AsUTF8String(repr);
+    const char *bytes = PyBytes_AS_STRING(str);
+    QString out = QString::fromUtf8(bytes);
+    qDebug() << out << "POINT READER";
+    return out;
+}
+
+void NeuronetMaster::parserString(QString inString)
+{
+    inString.remove(0, 1);
+    inString.chop(1);
+    inString.remove(QRegExp("[()]+"));
+
+    qDebug() << inString << "CROPED STRING";
+    countCath = inString.split(",").count() / numCoordinates;
+    qDebug() << countCath << "колво катетеров";
+    for(int i =0; i < countCath * numCoordinates; i += numCoordinates)
+    {
+        x = inString.split(",")[0 + i].toInt();
+        y = inString.split(",")[1 + i].toInt();
+        qDebug() << y;
+    }
 }
 

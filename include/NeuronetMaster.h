@@ -7,11 +7,7 @@
 #include <QDebug>
 #include <QObject>
 #include <QEventLoop>
-#include <QtNetwork/QUdpSocket>
-#include "QFileSystemWatcher"
-#include <QtNetwork/QHostAddress>
 #include <QTimer>
-
 #define slots
 
 namespace  {
@@ -28,8 +24,6 @@ class NeuronetMaster: public QObject
     Q_OBJECT
 
 public:
-    // открытая реализация
-//        NeuronetMaster *q_ptr;
 
     NeuronetMaster();
 
@@ -47,13 +41,6 @@ private:
 
     const QString imagePath = "sad";
 
-    QFileSystemWatcher watcher;
-
-    /// \ сокет TCP
-    QUdpSocket udpSocket;
-
-    int server_status;
-
     /// \ Обработка кадра инструментами Питона
     bool TF_processing(bool init);
 
@@ -69,17 +56,7 @@ private:
     /// \ парсер строки
     void parserString(QString inString);
 
-    /// \ Инициализация сокета
-    void connectSocket();
-
-    /// \ прием
-    bool reciveSocket();
-
     void sleep();
-
-    /// \ отправка
-    bool sendSocket();
-
 
 };
 #endif
