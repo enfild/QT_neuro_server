@@ -2,11 +2,17 @@
 #define COMMUNICATIONMASTER_H
 
 #include <QObject>
-#include <QUdpSocket>
-#include <QHostAddress>
+
+#include <include/NeuronetMaster.h>
+
+#include <QLocalSocket>
+#include <QLocalServer>
+
+#include <QString>
 #include <QImage>
 #include <QEventLoop>
 #include <QTimer>
+#include <QBuffer>
 
 namespace  {
 
@@ -30,36 +36,38 @@ class CommunicationMaster: public QObject
 
 public:
 
-    CommunicationMaster();
+    CommunicationMaster(QString serverName);
 
     ~CommunicationMaster();
+
+    static QLocalSocket* localSocket;
 
     /// \ Инициализация сокета
     void connectSocket();
 
-//signals:
-//    bool imageIsReady;
+public slots:
+
+    // Слот обработки нового клиентского подключения
+    virtual void slotNewConnection();
+
+    // Слот чтения информации от клиента
+    void slotReadClient();
+
+    // Метод для отправки клиенту подтверждения о приёме информации
+    static void sendToClient(QLocalSocket* localSocket, QString stringIn);
 
 private:
 
-    QImage *image;
-
-    /// \ сокет проги
-    QUdpSocket MainSocket;
+    // Указатель на QLocalServer
+    QLocalServer* localServer;
 
     /// \ сокет дочернего процесса
-    QUdpSocket MinorSocket;
+    //    MyLocalServer server("MyLocalServer");
 
     /// \ статус сервера
     int server_status;
 
-    /// \ прием
-    bool reciveSocket();
-
     void sleep();
-
-    /// \ отправка
-    bool sendSocket();
 
 };
 

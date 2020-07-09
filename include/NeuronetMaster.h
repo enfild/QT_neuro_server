@@ -32,17 +32,19 @@ public:
     /// \ Инициализация Графа, загрузка его в память
     void TF_init();
 
+    /// \ Обработка кадра инструментами Питона
+    static QString TF_processing(bool init);
+
 private:
     PyObject *pModule; //create main module
 
-    PyObject *main_dict;
+    static PyObject *main_dict;
 
-    PyObject *translation;
+    static PyObject *translation;
 
-    const QString imagePath = "sad";
+    static QString points;
 
-    /// \ Обработка кадра инструментами Питона
-    bool TF_processing(bool init);
+    static QString outString;
 
     /// \ Обработка кадра инструментами Питона
     static void Shower();
@@ -51,10 +53,10 @@ private:
     static bool TF_done();
 
     /// \ чтение точек
-    QString pointReader(PyObject *ItemString);
+    static QString pointReader(PyObject *ItemString);
 
     /// \ парсер строки
-    void parserString(QString inString);
+    static QString parserString(QString inString);
 
     void sleep();
 

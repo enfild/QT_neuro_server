@@ -2,9 +2,12 @@
 #undef slots
 #include "include/NeuronetMaster.h"
 #define slots
+#include "include/CommunicationMaster.h"
 
 NeuronetMaster::NeuronetMaster() : QObject(nullptr)
 {
+//    CommunicationMaster cMaster("neuServer");
+
     qInfo() << "TF_using";
     if (!Py_IsInitialized()){
         Py_Initialize();
@@ -43,15 +46,16 @@ void NeuronetMaster::TF_init()
 {
     qInfo() << "START PY_INIT";
 
-    PyRun_SimpleString("import os	\n"\
-                       "import sys	\n"\
-                       "import cv2	\n"\
-                       "import numpy as np	\n"\
-                       "import tensorflow as tf	\n"\
-                       "from datetime import datetime	\n"\
-                       "from utils import label_map_util	\n"\
-                       "from utils import visualization_utils as vis_util	\n"\
-                       );
+    PyRun_SimpleString(
+                "import os	\n"\
+                "import sys	\n"\
+                "import cv2	\n"\
+                "import numpy as np	\n"\
+                "import tensorflow as tf	\n"\
+                "from datetime import datetime	\n"\
+                "from utils import label_map_util	\n"\
+                "from utils import visualization_utils as vis_util	\n"\
+                );
 
     qInfo() << "INIT TF DONE!";
 
@@ -95,9 +99,9 @@ void NeuronetMaster::TF_init()
     qInfo() << "INIT GRAPH DONE";
 }
 
-bool NeuronetMaster::TF_processing(bool init)
+QString NeuronetMaster::TF_processing(bool init)
 {
-    sleep();
+//    sleep();
     PyRun_SimpleString(
                 "print('TF_PROCESSIVNG')	\n"\
                 "start_time = datetime.now()	\n"\
@@ -105,7 +109,7 @@ bool NeuronetMaster::TF_processing(bool init)
     if(!init)
     {
         PyRun_SimpleString(
-                    "image = cv2.imread(PATH_TO_IMAGE)	\n"\
+                    "image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
                     );
     }
     else
@@ -145,10 +149,14 @@ bool NeuronetMaster::TF_processing(bool init)
                 );
 
     translation = PyDict_GetItemString(main_dict, "listCoordinates");
-    QString points = pointReader(translation);
-    parserString(points);
+    points = pointReader(translation);
+    outString = parserString(points);
+
+    CommunicationMaster::sendToClient(CommunicationMaster::localSocket, outString);
 
     Shower();
+
+    return outString;
 }
 
 void NeuronetMaster::Shower()
@@ -164,15 +172,15 @@ void NeuronetMaster::Shower()
 
 QString NeuronetMaster::pointReader(PyObject *ItemString)
 {
-    PyObject* repr = PyObject_Repr(ItemString);
-    PyObject* str = PyUnicode_AsUTF8String(repr);
-    const char *bytes = PyBytes_AS_STRING(str);
-    QString out = QString::fromUtf8(bytes);
+    PyObject* representedString = PyObject_Repr(ItemString);
+    PyObject* outString = PyUnicode_AsUTF8String(representedString);
+    const char *bytesPoints = PyBytes_AS_STRING(outString);
+    QString out = QString::fromUtf8(bytesPoints);
     qDebug() << out << "POINT READER";
     return out;
 }
 
-void NeuronetMaster::parserString(QString inString)
+QString NeuronetMaster::parserString(QString inString)
 {
     inString.remove(0, 1);
     inString.chop(1);
@@ -187,5 +195,6 @@ void NeuronetMaster::parserString(QString inString)
         y = inString.split(",")[1 + i].toInt();
         qDebug() << y;
     }
+    return inString;
 }
 

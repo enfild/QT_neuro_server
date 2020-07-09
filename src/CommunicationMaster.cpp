@@ -1,13 +1,27 @@
 #include "include/CommunicationMaster.h"
-
-#include <QDataStream>
-#include <QPixmap>
+#include "include/NeuronetMaster.h"
 
 
 
-CommunicationMaster::CommunicationMaster() : QObject(nullptr)
+
+
+CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
 {
-    CommunicationMaster::connectSocket();
+    // Создаём и запускаем сервер командой listen.
+    // Если сервер не может быть запущен, выдать сообщение об ошибке и завершить работу программы
+    localServer = new QLocalServer(this);
+    if(!localServer->listen(serverName))
+    {
+        qWarning() << "BAAAAAAAAD";
+        localServer->close();
+        return;
+    }
+    qDebug() << "ZAEBAL" << serverName;
+
+//    NeuronetMaster nMaster;
+
+    // Соединяем сигнал сервера о наличии нового подключения с обработчиком нового клиентского подключения
+    connect(localServer, SIGNAL(newConnection()), this, SLOT(slotNewConnection()));
 }
 
 CommunicationMaster::~CommunicationMaster(){
@@ -15,80 +29,72 @@ CommunicationMaster::~CommunicationMaster(){
 
 }
 
-void CommunicationMaster::connectSocket()
+
+void CommunicationMaster::slotNewConnection()
 {
-    MainSocket.bind(QHostAddress::LocalHost, Port);
-    QObject::connect(&MainSocket, &QUdpSocket::readyRead, this, [=]() {reciveSocket();});
+    qDebug() << "NewConnection";
+    // Получаем сокет, подключённый к серверу
+    localSocket = localServer->nextPendingConnection();
+    // Соединяем сигнал отключения сокета с обработчиком удаления сокета
+
+    connect(localSocket, SIGNAL(disconnected()), localSocket, SLOT(deleteLater()));
+    // Соединяем сигнал сокета о готовности передачи данных с обработчиком данных
+
+    connect(localSocket, SIGNAL(readyRead()), this, SLOT(slotReadClient()));
+    server_status = localSocket->isValid();
+    // Отправляем информацию клиенту о соединении с сервером
+    //    sendToClient(localSocket, "Server response: Connected!");
 }
 
-bool CommunicationMaster::reciveSocket(){
-    bool result;
-    qDebug() << "CATCH SIGNAL";
-//    if(udpSocket.bytesAvailable()){
-//        qDebug() << "BYTES AVAILABLE";
-//    }
-    while (MainSocket.hasPendingDatagrams()) {
-    qDebug() << "HAS DATAGRAMM";
-        QByteArray buffer(MainSocket.pendingDatagramSize(), 0 );
-        MainSocket.readDatagram( buffer.data(), buffer.size() );
+// Слот чтения информации от клиента
+void CommunicationMaster::slotReadClient()
+{
+    qDebug() << "slotReadClient";
+    // Получаем QLocalSocket после срабатывания сигнала о готовности передачи данных
+    localSocket = (QLocalSocket*)sender();
 
-        QDataStream stream( buffer );
-        stream.setVersion( QDataStream::Qt_5_0 );
+    if(localSocket->isValid()){
 
-        quint16 width, height, y;
-        stream >> width >> height >> y;
+        qDebug() << localSocket;
 
-        if( !image )
-            image = new QImage( width, height, QImage::Format_RGB32 );
-        else if( image->width() != width || image->height() != height )
-        {
-            delete image;
-            image = new QImage( width, height, QImage::Format_RGB32 );
-        }
-qDebug() << "before datagramm";
-        for( int x=0; x<width; ++x )
-        {
-            quint8 red, green, blue;
-            stream >> red >> green >> blue;
+        QByteArray inArray = localSocket->readAll();
 
-            image->setPixel( x, y, qRgb( red, green, blue ) );
-            qDebug() << sizeof(image);
-        }
+        qDebug() << sizeof(inArray);
 
+        QImage image = QImage::fromData(inArray, "PNG");
 
-        //        qDebug() << "HAS PENDING";
+        const auto resSaved = image.save("D:/0.png");
 
-        //        QByteArray datagram;
-        //        datagram.resize(udpSocket.pendingDatagramSize());
-        //        result = udpSocket.readDatagram(datagram.data(), datagram.size());
+        qDebug() << sizeof(image);
 
-        //        qDebug() << "Message receive: " << datagram.data();
-
+        QString coordinates = NeuronetMaster::TF_processing(false);
     }
-//    setText( "s" );
-//      setPixmap( QPixmap::fromImage( *image ) );
-//      resize( image->size() );
-    //сборка изображения
 
 
-    return result;
+
 }
 
-bool CommunicationMaster::sendSocket(){
+// Метод для отправки клиенту подтверждения о приёме информации
+void CommunicationMaster::sendToClient(QLocalSocket* localSocket, QString stringIn)
+{
+    qDebug() << localSocket->isValid();
 
-    QByteArray Data; // Message for send
-    Data += "SAMP";
-    Data += QString( 93 );
-    Data += QString( 119 );
-    Data += QString( 26 );
-    Data += QString( 214 );
-    Data += QString(7777 & 0xFF);
-    Data += QString(7777 >> 8 & 0xFF);
-    Data.append("i");
+    QByteArray baString = stringIn.toUtf8();
 
-    bool result = MainSocket.writeDatagram(Data, QHostAddress::LocalHost, Port);
-    return result;
+    localSocket->write(baString);
+
+//        QImage image;
+//        qDebug() << sizeof(image);
+//            QByteArray bytesData;
+//            QBuffer buffer(&bytesData);
+//            buffer.open(QIODevice::WriteOnly);
+//            image.save(&buffer, "png");
+//            qDebug() << sizeof(bytesData);
+//            localSocket->write(bytesData);
+
 }
+
+
 
 void CommunicationMaster::sleep()
 {
