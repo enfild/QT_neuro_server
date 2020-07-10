@@ -10,6 +10,11 @@
 #include <QTimer>
 #define slots
 
+#include <QImage>
+#include "opencv2/core.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+
 namespace  {
 // колво катетеров
 int countCath;
@@ -33,32 +38,34 @@ public:
     void TF_init();
 
     /// \ Обработка кадра инструментами Питона
-    static QString TF_processing(bool init);
+    QString TF_processing(bool init);
 
 private:
     PyObject *pModule; //create main module
 
-    static PyObject *main_dict;
+    PyObject *main_dict;
 
-    static PyObject *translation;
+    PyObject *translation;
 
-    static QString points;
+    QString points;
 
-    static QString outString;
+    QString outString;
 
     /// \ Обработка кадра инструментами Питона
-    static void Shower();
+    void Shower();
 
     ///\ подстраховка
-    static bool TF_done();
+    bool TF_done();
 
     /// \ чтение точек
-    static QString pointReader(PyObject *ItemString);
+    QString pointReader(PyObject *ItemString);
 
     /// \ парсер строки
-    static QString parserString(QString inString);
+    QString parserString(QString inString);
 
     void sleep();
+
+    inline cv::Mat QImageToCvMat( const QImage &inImage, bool inCloneImageData = true );
 
 };
 #endif

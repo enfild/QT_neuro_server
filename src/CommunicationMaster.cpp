@@ -1,5 +1,4 @@
 #include "include/CommunicationMaster.h"
-#include "include/NeuronetMaster.h"
 
 
 
@@ -67,7 +66,7 @@ void CommunicationMaster::slotReadClient()
 
         qDebug() << sizeof(image);
 
-        QString coordinates = NeuronetMaster::TF_processing(false);
+//        QString coordinates = NeuronetMaster::TF_processing(false);
     }
 
 
@@ -82,15 +81,6 @@ void CommunicationMaster::sendToClient(QLocalSocket* localSocket, QString string
     QByteArray baString = stringIn.toUtf8();
 
     localSocket->write(baString);
-
-//        QImage image;
-//        qDebug() << sizeof(image);
-//            QByteArray bytesData;
-//            QBuffer buffer(&bytesData);
-//            buffer.open(QIODevice::WriteOnly);
-//            image.save(&buffer, "png");
-//            qDebug() << sizeof(bytesData);
-//            localSocket->write(bytesData);
 
 }
 

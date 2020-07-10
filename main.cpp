@@ -5,9 +5,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-//    CommunicationMaster cMaster("neuServer");
+    CommunicationMaster cMaster("neuServer");
 
-//    NeuronetMaster nMaster;
+    NeuronetMaster nMaster;
 
     return a.exec();
 }

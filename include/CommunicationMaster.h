@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include <include/NeuronetMaster.h>
+//#include <include/NeuronetMaster.h>
 
 #include <QLocalSocket>
 #include <QLocalServer>
@@ -40,7 +40,7 @@ public:
 
     ~CommunicationMaster();
 
-    static QLocalSocket* localSocket;
+    QLocalSocket* localSocket;
 
     /// \ Инициализация сокета
     void connectSocket();
@@ -54,15 +54,15 @@ public slots:
     void slotReadClient();
 
     // Метод для отправки клиенту подтверждения о приёме информации
-    static void sendToClient(QLocalSocket* localSocket, QString stringIn);
+    void sendToClient(QLocalSocket* localSocket, QString stringIn);
+
+signals:
+    void recieveDone();
 
 private:
 
     // Указатель на QLocalServer
     QLocalServer* localServer;
-
-    /// \ сокет дочернего процесса
-    //    MyLocalServer server("MyLocalServer");
 
     /// \ статус сервера
     int server_status;
