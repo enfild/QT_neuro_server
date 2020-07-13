@@ -1,15 +1,14 @@
 #ifndef TF_using_HEADER
 #define TF_using_HEADER
-#define QT_NO_KEYWORDS
+//#define QT_NO_KEYWORDS
 #undef slots
 //#define PY_SSIZE_T_CLEAN
 #include "Python.h"
+#define slots
 #include <QDebug>
 #include <QObject>
 #include <QEventLoop>
 #include <QTimer>
-#define slots
-
 #include <QImage>
 #include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"

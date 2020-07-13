@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-//#include <include/NeuronetMaster.h>
+#include <include/NeuronetMaster.h>
 
 #include <QLocalSocket>
 #include <QLocalServer>
@@ -13,7 +13,9 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QBuffer>
+#define slots
 
+//#define Q_SIGNALS
 namespace  {
 
 int Port = 7755;
@@ -30,11 +32,16 @@ struct command {
 
 }
 
+// class NeuronetMaster;
+
 class CommunicationMaster: public QObject
 {
     Q_OBJECT
 
+
 public:
+
+     NeuronetMaster nMaster;
 
     CommunicationMaster(QString serverName);
 
@@ -47,7 +54,7 @@ public:
 
     QImage imageQ;
 
-public slots:
+private slots:
 
     // Слот обработки нового клиентского подключения
     virtual void slotNewConnection();
@@ -58,8 +65,6 @@ public slots:
     // Метод для отправки клиенту подтверждения о приёме информации
     void sendToClient(QLocalSocket* localSocket, QString stringIn);
 
-signals:
-    void recieveDone();
 
 private:
 

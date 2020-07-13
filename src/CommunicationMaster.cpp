@@ -1,5 +1,5 @@
 #include "include/CommunicationMaster.h"
-#include "include/NeuronetMaster.h"
+//#include "include/NeuronetMaster.h"
 
 
 CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
@@ -15,18 +15,14 @@ CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
     }
     qDebug() << "ZAEBAL" << serverName;
 
-        NeuronetMaster nMaster;
+//    NeuronetMaster nMaster;
 
     // Соединяем сигнал сервера о наличии нового подключения с обработчиком нового клиентского подключения
     QObject::connect(localServer, SIGNAL(newConnection()), this, SLOT(slotNewConnection()));
 
-//    QObject::connect(this, SIGNAL(recieveDone()), &nMaster, SLOT(TF_processing(false, imageQ)));
+//    QObject::connect(localServer, localServer->newConnection(), this, [=]() {slotNewConnection();});
 
-//    QObject::connect(this, recieveDone(), [=] (QImage imageQ) {nMaster.TF_processing(false, imageQ); });
-    QObject::connect(this, SIGNAL(recieveDone()), &nMaster, SLOT(TF_processing(false, QImage)));
-
-
-   }
+}
 
 CommunicationMaster::~CommunicationMaster(){
 
@@ -69,10 +65,7 @@ void CommunicationMaster::slotReadClient()
 
         qDebug() << sizeof(imageQ) << "READED IMAGE";
 
-
-        emit recieveDone();
-
-//                QString coordinates = NeuronetMaster::TF_processing(false);
+        nMaster.TF_processing(false, imageQ);
     }
 
 }
