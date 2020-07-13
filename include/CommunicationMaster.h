@@ -57,7 +57,7 @@ public slots:
     void sendToClient(QLocalSocket* localSocket, QString stringIn);
 
 signals:
-    void recieveDone();
+    void recieveDone(QImage imageQ);
 
 private:
 

@@ -10,11 +10,11 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
     qInfo() << "TF_using";
     if (!Py_IsInitialized()){
         Py_Initialize();
-    }
-    pModule = PyImport_AddModule("__main__"); //create main module
-    main_dict   = PyModule_GetDict(pModule);
 
-    TF_init();
+        pModule = PyImport_AddModule("__main__"); //create main module
+        main_dict = PyModule_GetDict(pModule);
+        TF_init();
+    }
 }
 
 NeuronetMaster::~NeuronetMaster()
@@ -91,16 +91,17 @@ void NeuronetMaster::TF_init()
                 "detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')	\n"\
                 "num_detections = detection_graph.get_tensor_by_name('num_detections:0')	\n"\
                 );
-
-    NeuronetMaster::TF_processing(true);
+    QImage image;
+    NeuronetMaster::TF_processing(true, image);
 
 
     qInfo() << "INIT GRAPH DONE";
 }
 
-QString NeuronetMaster::TF_processing(bool init)
+QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
 {
     //    sleep();
+    qDebug() << sizeof(imageQ);
     PyRun_SimpleString(
                 "print('TF_PROCESSIVNG')	\n"\
                 "start_time = datetime.now()	\n"\
@@ -149,13 +150,11 @@ QString NeuronetMaster::TF_processing(bool init)
 
     translation = PyDict_GetItemString(main_dict, "listCoordinates");
     points = pointReader(translation);
-    outString = parserString(points);
-
-    //    CommunicationMaster::sendToClient(CommunicationMaster::localSocket, outString);
+//    finString = parserString(points);
 
     Shower();
 
-    return outString;
+    return "sdf";
 }
 
 void NeuronetMaster::Shower()
@@ -171,9 +170,9 @@ void NeuronetMaster::Shower()
 
 QString NeuronetMaster::pointReader(PyObject *ItemString)
 {
-    PyObject* representedString = PyObject_Repr(ItemString);
-    PyObject* outString = PyUnicode_AsUTF8String(representedString);
-    const char *bytesPoints = PyBytes_AS_STRING(outString);
+    representedString = PyObject_Repr(ItemString);
+    outString = PyUnicode_AsUTF8String(representedString);
+    QByteArray bytesPoints = PyBytes_AS_STRING(outString);
     QString out = QString::fromUtf8(bytesPoints);
     qDebug() << out << "POINT READER";
     return out;
@@ -206,10 +205,10 @@ inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true
     case QImage::Format_ARGB32_Premultiplied:
     {
         cv::Mat mat(inImage.height(), inImage.width(),
-                     CV_8UC4,
-                     const_cast<uchar*>(inImage.bits()),
-                     static_cast<size_t>(inImage.bytesPerLine())
-                     );
+                    CV_8UC4,
+                    const_cast<uchar*>(inImage.bits()),
+                    static_cast<size_t>(inImage.bytesPerLine())
+                    );
 
         return (inCloneImageData ? mat.clone() : mat);
     }
@@ -223,10 +222,10 @@ inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true
         }
 
         cv::Mat mat(inImage.height(), inImage.width(),
-                     CV_8UC4,
-                     const_cast<uchar*>(inImage.bits()),
-                     static_cast<size_t>(inImage.bytesPerLine())
-                     );
+                    CV_8UC4,
+                    const_cast<uchar*>(inImage.bits()),
+                    static_cast<size_t>(inImage.bytesPerLine())
+                    );
 
         cv::Mat matNoAlpha;
 
@@ -246,10 +245,10 @@ inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true
         QImage swapped = inImage.rgbSwapped();
 
         return cv::Mat(swapped.height(), swapped.width(),
-                        CV_8UC3,
-                        const_cast<uchar*>(swapped.bits()),
-                        static_cast<size_t>(swapped.bytesPerLine())
-                        ).clone();
+                       CV_8UC3,
+                       const_cast<uchar*>(swapped.bits()),
+                       static_cast<size_t>(swapped.bytesPerLine())
+                       ).clone();
     }
 
         // 8-bit, 1 channel

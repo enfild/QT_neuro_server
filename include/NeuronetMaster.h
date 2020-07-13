@@ -37,8 +37,10 @@ public:
     /// \ Инициализация Графа, загрузка его в память
     void TF_init();
 
+public slots:
+
     /// \ Обработка кадра инструментами Питона
-    QString TF_processing(bool init);
+    QString TF_processing(bool init, QImage imageQ);
 
 private:
     PyObject *pModule; //create main module
@@ -47,9 +49,13 @@ private:
 
     PyObject *translation;
 
+    PyObject* representedString;
+
+    PyObject* outString;
+
     QString points;
 
-    QString outString;
+    QString finString;
 
     /// \ Обработка кадра инструментами Питона
     void Shower();

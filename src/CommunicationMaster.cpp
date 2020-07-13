@@ -2,8 +2,6 @@
 
 
 
-
-
 CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
 {
     // Создаём и запускаем сервер командой listen.
@@ -17,17 +15,17 @@ CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
     }
     qDebug() << "ZAEBAL" << serverName;
 
-//    NeuronetMaster nMaster;
+    //    NeuronetMaster nMaster;
 
     // Соединяем сигнал сервера о наличии нового подключения с обработчиком нового клиентского подключения
-    connect(localServer, SIGNAL(newConnection()), this, SLOT(slotNewConnection()));
+    QObject::connect(localServer, SIGNAL(newConnection()), this, SLOT(slotNewConnection()));
+
+    QObject::connect(this, SIGNAL(&CommunicationMaster::recieveDone(image)), this, SLOT(&NeuronetMaster::TF_processing(false, image)));
 }
 
 CommunicationMaster::~CommunicationMaster(){
 
-
 }
-
 
 void CommunicationMaster::slotNewConnection()
 {
@@ -66,10 +64,10 @@ void CommunicationMaster::slotReadClient()
 
         qDebug() << sizeof(image);
 
-//        QString coordinates = NeuronetMaster::TF_processing(false);
+        emit recieveDone(image);
+
+        //        QString coordinates = NeuronetMaster::TF_processing(false);
     }
-
-
 
 }
 
