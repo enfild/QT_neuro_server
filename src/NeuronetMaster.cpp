@@ -15,6 +15,7 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
         main_dict = PyModule_GetDict(pModule);
         TF_init();
     }
+
 }
 
 NeuronetMaster::~NeuronetMaster()
@@ -98,10 +99,11 @@ void NeuronetMaster::TF_init()
     qInfo() << "INIT GRAPH DONE";
 }
 
-QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
+void NeuronetMaster::TF_processing(bool init, QImage imageQ)
 {
+//    qDebug() << Commun
     //    sleep();
-    qDebug() << sizeof(imageQ);
+    qDebug() << sizeof(imageQ) << "TF_PROCESSING";
     PyRun_SimpleString(
                 "print('TF_PROCESSIVNG')	\n"\
                 "start_time = datetime.now()	\n"\
@@ -149,12 +151,14 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                 );
 
     translation = PyDict_GetItemString(main_dict, "listCoordinates");
+
+
     points = pointReader(translation);
-//    finString = parserString(points);
+    finString = parserString(points);
 
     Shower();
 
-    return "sdf";
+//    return "sdf";
 }
 
 void NeuronetMaster::Shower()

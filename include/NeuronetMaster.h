@@ -40,7 +40,7 @@ public:
 public slots:
 
     /// \ Обработка кадра инструментами Питона
-    QString TF_processing(bool init, QImage imageQ);
+    void TF_processing(bool init, QImage imageQ);
 
 private:
     PyObject *pModule; //create main module

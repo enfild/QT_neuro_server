@@ -16,7 +16,7 @@ INCLUDE_DIRECTORIES(
     E:/tools/opencv/build/include
     )
 
-LINK_DIRECTORIES($ENV{PYTHON37}/libs)
+#LINK_DIRECTORIES($ENV{PYTHON37}/libs)
 # PTH to LIB of python for neuronet
 link_libraries(C:/Users/qwert/AppData/Local/Programs/Python/Python37/libs/python37.lib)
 

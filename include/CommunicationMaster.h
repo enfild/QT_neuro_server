@@ -45,6 +45,8 @@ public:
     /// \ Инициализация сокета
     void connectSocket();
 
+    QImage imageQ;
+
 public slots:
 
     // Слот обработки нового клиентского подключения
@@ -57,7 +59,7 @@ public slots:
     void sendToClient(QLocalSocket* localSocket, QString stringIn);
 
 signals:
-    void recieveDone(QImage imageQ);
+    void recieveDone();
 
 private:
 

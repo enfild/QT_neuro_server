@@ -1,5 +1,5 @@
 #include "include/CommunicationMaster.h"
-
+#include "include/NeuronetMaster.h"
 
 
 CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
@@ -15,13 +15,18 @@ CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
     }
     qDebug() << "ZAEBAL" << serverName;
 
-    //    NeuronetMaster nMaster;
+        NeuronetMaster nMaster;
 
     // Соединяем сигнал сервера о наличии нового подключения с обработчиком нового клиентского подключения
     QObject::connect(localServer, SIGNAL(newConnection()), this, SLOT(slotNewConnection()));
 
-    QObject::connect(this, SIGNAL(&CommunicationMaster::recieveDone(image)), this, SLOT(&NeuronetMaster::TF_processing(false, image)));
-}
+//    QObject::connect(this, SIGNAL(recieveDone()), &nMaster, SLOT(TF_processing(false, imageQ)));
+
+//    QObject::connect(this, recieveDone(), [=] (QImage imageQ) {nMaster.TF_processing(false, imageQ); });
+    QObject::connect(this, SIGNAL(recieveDone()), &nMaster, SLOT(TF_processing(false, QImage)));
+
+
+   }
 
 CommunicationMaster::~CommunicationMaster(){
 
@@ -58,15 +63,16 @@ void CommunicationMaster::slotReadClient()
 
         qDebug() << sizeof(inArray);
 
-        QImage image = QImage::fromData(inArray, "PNG");
+        imageQ = QImage::fromData(inArray, "PNG");
 
-        const auto resSaved = image.save("D:/0.png");
+        const auto resSaved = imageQ.save("D:/0.png");
 
-        qDebug() << sizeof(image);
+        qDebug() << sizeof(imageQ) << "READED IMAGE";
 
-        emit recieveDone(image);
 
-        //        QString coordinates = NeuronetMaster::TF_processing(false);
+        emit recieveDone();
+
+//                QString coordinates = NeuronetMaster::TF_processing(false);
     }
 
 }
