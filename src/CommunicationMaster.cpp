@@ -1,5 +1,4 @@
 #include "include/CommunicationMaster.h"
-//#include "include/NeuronetMaster.h"
 
 
 CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
@@ -15,12 +14,7 @@ CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
     }
     qDebug() << "ZAEBAL" << serverName;
 
-//    NeuronetMaster nMaster;
-
-    // Соединяем сигнал сервера о наличии нового подключения с обработчиком нового клиентского подключения
     QObject::connect(localServer, SIGNAL(newConnection()), this, SLOT(slotNewConnection()));
-
-//    QObject::connect(localServer, localServer->newConnection(), this, [=]() {slotNewConnection();});
 
 }
 
@@ -59,15 +53,14 @@ void CommunicationMaster::slotReadClient()
 
         qDebug() << sizeof(inArray);
 
-        imageQ = QImage::fromData(inArray, "PNG");
+        temp.imageQ = QImage::fromData(inArray, "PNG");
 
-        const auto resSaved = imageQ.save("D:/0.png");
+        //        const auto resSaved = imageQ.save("D:/0.png");
 
-        qDebug() << sizeof(imageQ) << "READED IMAGE";
+        qDebug() << sizeof(temp.imageQ) << "READED IMAGE";
 
-        nMaster.TF_processing(false, imageQ);
+        nMaster.TF_processing(false, temp.imageQ);
     }
-
 }
 
 // Метод для отправки клиенту подтверждения о приёме информации
@@ -80,8 +73,6 @@ void CommunicationMaster::sendToClient(QLocalSocket* localSocket, QString string
     localSocket->write(baString);
 
 }
-
-
 
 void CommunicationMaster::sleep()
 {

@@ -13,6 +13,7 @@
 #include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
+#include <QBuffer>
 
 namespace  {
 // колво катетеров
@@ -39,12 +40,14 @@ public:
 public slots:
 
     /// \ Обработка кадра инструментами Питона
-    void TF_processing(bool init, QImage imageQ);
+    QString TF_processing(bool init, QImage imageQ);
 
 private:
     PyObject *pModule; //create main module
 
     PyObject *main_dict;
+
+    PyObject *imagePy;
 
     PyObject *translation;
 

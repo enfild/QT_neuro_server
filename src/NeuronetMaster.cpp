@@ -99,10 +99,32 @@ void NeuronetMaster::TF_init()
     qInfo() << "INIT GRAPH DONE";
 }
 
-void NeuronetMaster::TF_processing(bool init, QImage imageQ)
+QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
 {
-//    qDebug() << Commun
-    //    sleep();
+
+
+    //Перевод изображения в обьект питона
+
+    QByteArray bytesImages;
+    QBuffer buffer(&bytesImages);
+    buffer.open(QIODevice::WriteOnly);
+    imageQ.save(&buffer, "png");
+
+    imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(bytesImages.data()), static_cast<Py_ssize_t>(bytesImages.size()));
+
+    int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
+
+    PyRun_SimpleString("from sys import getsizeof");
+
+    PyRun_SimpleString("print('Size of image Py:')");
+    PyRun_SimpleString("print(getsizeof(imagePy))");
+
+    PyRun_SimpleString("np_image = np.frombuffer(imagePy, dtype = np.uint8)");
+        PyRun_SimpleString("img = cv2.imdecode(np_image, cv2.IMREAD_COLOR)   \n"\
+                           "cv2.imshow('GUI1', img)");
+//....................................................... перевод окончен
+
+
     qDebug() << sizeof(imageQ) << "TF_PROCESSING";
     PyRun_SimpleString(
                 "print('TF_PROCESSIVNG')	\n"\
@@ -150,6 +172,8 @@ void NeuronetMaster::TF_processing(bool init, QImage imageQ)
                 "print(listCoordinates)	\n"\
                 );
 
+
+
     translation = PyDict_GetItemString(main_dict, "listCoordinates");
 
 
@@ -158,7 +182,7 @@ void NeuronetMaster::TF_processing(bool init, QImage imageQ)
 
     Shower();
 
-//    return "sdf";
+    return finString;
 }
 
 void NeuronetMaster::Shower()
@@ -174,6 +198,7 @@ void NeuronetMaster::Shower()
 
 QString NeuronetMaster::pointReader(PyObject *ItemString)
 {
+
     representedString = PyObject_Repr(ItemString);
     outString = PyUnicode_AsUTF8String(representedString);
     QByteArray bytesPoints = PyBytes_AS_STRING(outString);
