@@ -41,7 +41,6 @@ void CommunicationMaster::slotNewConnection()
 // Слот чтения информации от клиента
 void CommunicationMaster::slotReadClient()
 {
-
     // Получаем QLocalSocket после срабатывания сигнала о готовности передачи данных
     localSocket = (QLocalSocket*)sender();
 

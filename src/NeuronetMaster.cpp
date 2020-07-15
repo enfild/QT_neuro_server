@@ -5,8 +5,6 @@
 
 NeuronetMaster::NeuronetMaster() : QObject(nullptr)
 {
-    //    CommunicationMaster cMaster("neuServer");
-
     qInfo() << "TF_using";
     if (!Py_IsInitialized())
     {
@@ -16,9 +14,9 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
         pModule = PyImport_AddModule("__main__"); //create main module
         main_dict = PyModule_GetDict(pModule);
 
+        // инициализация TF и графа
         TF_init();
     }
-
 }
 
 NeuronetMaster::~NeuronetMaster()
@@ -121,12 +119,6 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                 );
     if(!init)
     {
-        PyRun_SimpleString(
-                    "image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
-                    );
-    }
-    else
-    {
         // если не инициализация, то раскладываем кадр и отправляем в словарь Python
         QByteArray bytesImages;
         QBuffer buffer(&bytesImages);
@@ -142,7 +134,12 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                     "img = cv2.imdecode(np_image, cv2.IMREAD_COLOR) \n"\
                     "image = img	\n"\
                     );
-
+    }
+    else
+    {
+        PyRun_SimpleString(
+                    "image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
+                    );
     }
     PyRun_SimpleString(
                 "image = cv2.resize(image, (1024, 1024))	\n"\
