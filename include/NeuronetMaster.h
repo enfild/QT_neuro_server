@@ -24,6 +24,10 @@ int x;
 int y;
 }
 
+namespace  {
+
+}
+
 class NeuronetMaster: public QObject
 {
     Q_OBJECT
@@ -65,14 +69,16 @@ private:
     ///\ подстраховка
     bool TF_done();
 
-    /// \ чтение точек
+    /// \ чтение точек из питоновского обьекта
     QString pointReader(PyObject *ItemString);
 
-    /// \ парсер строки
+    /// \ дробление строки, вычленение координат
     QString parserString(QString inString);
 
+    /// \ ожидание 100мс
     void sleep();
 
+    /// \ перевод QIMage to cv::mat - вспомогательная функция
     inline cv::Mat QImageToCvMat( const QImage &inImage, bool inCloneImageData = true );
 
 };

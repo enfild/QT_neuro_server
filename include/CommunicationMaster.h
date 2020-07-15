@@ -2,21 +2,15 @@
 #define COMMUNICATIONMASTER_H
 
 #include <QObject>
-
 #include <include/NeuronetMaster.h>
-
 #include <QLocalSocket>
 #include <QLocalServer>
-
 #include <QString>
 #include <QImage>
 #include <QEventLoop>
 #include <QTimer>
 #include <QBuffer>
 #define slots
-
-
-
 
 namespace  {
 
@@ -46,10 +40,13 @@ public:
 
     /// \ стартуем экземпляр класса с обработкой кадра
     NeuronetMaster nMaster;
+
     /// \ конструктор
     CommunicationMaster(QString serverName);
+
     /// \ деструктор
     ~CommunicationMaster();
+
     /// \ PIPE локальный сокет
     QLocalSocket* localSocket;
 
@@ -74,6 +71,7 @@ private:
 
     /// \ статус сервера
     int server_status;
+
     ///  \ задержка
     void sleep();
 

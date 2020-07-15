@@ -8,11 +8,14 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
     //    CommunicationMaster cMaster("neuServer");
 
     qInfo() << "TF_using";
-    if (!Py_IsInitialized()){
+    if (!Py_IsInitialized())
+    {
         Py_Initialize();
 
+        // обьявление модяля(__main__) и словаря для работы с переменными в этом модуле
         pModule = PyImport_AddModule("__main__"); //create main module
         main_dict = PyModule_GetDict(pModule);
+
         TF_init();
     }
 
@@ -21,7 +24,7 @@ NeuronetMaster::NeuronetMaster() : QObject(nullptr)
 NeuronetMaster::~NeuronetMaster()
 {
     qInfo() << "~TF_using";
-
+    TF_done();
     Py_Finalize();
 }
 
@@ -36,11 +39,22 @@ bool NeuronetMaster::TF_done()
 {
     qInfo() << "TF_done";
     PyRun_SimpleString("cv2.destroyWindow('GUI')	\n");
-    //    PyRun_SimpleString("sys.exit()");
-    // Py_Finalize();
+
+    // возврат ресурсов системе
+    Py_XDECREF(pModule); //clear main module
+
+    Py_XDECREF(main_dict);
+
+    Py_XDECREF(imagePy);
+
+    Py_XDECREF(translation);
+
+    Py_XDECREF(representedString);
+
+    Py_XDECREF(outString);
+
     return true;
 }
-
 
 void NeuronetMaster::TF_init()
 {
@@ -64,7 +78,6 @@ void NeuronetMaster::TF_init()
                 "CWD_PATH = 'C:/neuronet/object_detection'	\n"\
                 "PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, 'frozen_inference_graph.pb')	\n"\
                 "PATH_TO_LABELS = os.path.join(CWD_PATH, 'data', 'object-detection.pbtxt')	\n"\
-                "PATH_TO_IMAGE = 'C:/neuronet/Temp_frame/0.png'	\n"\
                 "PATH_TO_IMAGE_EX = 'C:/neuronet/Example_frame/0.png'	\n"\
                 "NUM_CLASSES = 2	\n"\
                 "NumbFrame = 0	\n"\
@@ -95,35 +108,11 @@ void NeuronetMaster::TF_init()
     QImage image;
     NeuronetMaster::TF_processing(true, image);
 
-
     qInfo() << "INIT GRAPH DONE";
 }
 
 QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
 {
-
-
-    //Перевод изображения в обьект питона
-
-    QByteArray bytesImages;
-    QBuffer buffer(&bytesImages);
-    buffer.open(QIODevice::WriteOnly);
-    imageQ.save(&buffer, "png");
-
-    imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(bytesImages.data()), static_cast<Py_ssize_t>(bytesImages.size()));
-
-    int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
-
-    PyRun_SimpleString("from sys import getsizeof");
-
-    PyRun_SimpleString("print('Size of image Py:')");
-    PyRun_SimpleString("print(getsizeof(imagePy))");
-
-    PyRun_SimpleString("np_image = np.frombuffer(imagePy, dtype = np.uint8)");
-        PyRun_SimpleString("img = cv2.imdecode(np_image, cv2.IMREAD_COLOR)   \n"\
-                           "cv2.imshow('GUI1', img)");
-//....................................................... перевод окончен
-
 
     qDebug() << sizeof(imageQ) << "TF_PROCESSING";
     PyRun_SimpleString(
@@ -138,9 +127,22 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
     }
     else
     {
+        // если не инициализация, то раскладываем кадр и отправляем в словарь Python
+        QByteArray bytesImages;
+        QBuffer buffer(&bytesImages);
+        buffer.open(QIODevice::WriteOnly);
+        imageQ.save(&buffer, "png");
+        // перевод байтового массива в байтовый обьект
+        imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(bytesImages.data()), static_cast<Py_ssize_t>(bytesImages.size()));
+
+        int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
+
         PyRun_SimpleString(
-                    "image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
+                    "np_image = np.frombuffer(imagePy, dtype = np.uint8)    \n"\
+                    "img = cv2.imdecode(np_image, cv2.IMREAD_COLOR) \n"\
+                    "image = img	\n"\
                     );
+
     }
     PyRun_SimpleString(
                 "image = cv2.resize(image, (1024, 1024))	\n"\
@@ -171,11 +173,8 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                 "			listCoordinates.append(center_coordinates)	\n"\
                 "print(listCoordinates)	\n"\
                 );
-
-
-
+    //получение обьекта из словаря
     translation = PyDict_GetItemString(main_dict, "listCoordinates");
-
 
     points = pointReader(translation);
     finString = parserString(points);
@@ -190,7 +189,6 @@ void NeuronetMaster::Shower()
     PyRun_SimpleString(
                 "NumbFrame += 1	\n"\
                 "cv2.imshow('GUI', image)	\n"\
-                "os.remove(PATH_TO_IMAGE)	\n"\
                 "print('PROCESSING IS DONE')	\n"\
                 "print(datetime.now() - start_time)	\n"\
                 );
@@ -198,11 +196,12 @@ void NeuronetMaster::Shower()
 
 QString NeuronetMaster::pointReader(PyObject *ItemString)
 {
-
     representedString = PyObject_Repr(ItemString);
     outString = PyUnicode_AsUTF8String(representedString);
+
     QByteArray bytesPoints = PyBytes_AS_STRING(outString);
     QString out = QString::fromUtf8(bytesPoints);
+
     qDebug() << out << "POINT READER";
     return out;
 }
@@ -216,6 +215,7 @@ QString NeuronetMaster::parserString(QString inString)
     qDebug() << inString << "CROPED STRING";
     countCath = inString.split(",").count() / numCoordinates;
     qDebug() << countCath << "колво катетеров";
+
     for(int i =0; i < countCath * numCoordinates; i += numCoordinates)
     {
         x = inString.split(",")[0 + i].toInt();
@@ -247,7 +247,7 @@ inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true
     {
         if (!inCloneImageData)
         {
-            qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the original QImage data";
+            qWarning() << "Conversion requires cloning so we don't modify the original QImage data";
         }
 
         cv::Mat mat(inImage.height(), inImage.width(),
@@ -268,7 +268,7 @@ inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true
     {
         if (!inCloneImageData)
         {
-            qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the original QImage data";
+            qWarning() << "Conversion requires cloning so we don't modify the original QImage data";
         }
 
         QImage swapped = inImage.rgbSwapped();
@@ -291,9 +291,8 @@ inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true
 
         return (inCloneImageData ? mat.clone() : mat);
     }
-
     default:
-        qWarning() << "ASM::QImageToCvMat() - QImage format not handled in switch:" << inImage.format();
+        qWarning() << "QImage format not handled in switch:" << inImage.format();
         break;
     }
 

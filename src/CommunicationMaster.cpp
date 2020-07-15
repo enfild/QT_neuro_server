@@ -1,6 +1,5 @@
 #include "include/CommunicationMaster.h"
 
-
 CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
 {
     // Создаём и запускаем сервер командой listen.
@@ -27,43 +26,39 @@ void CommunicationMaster::slotNewConnection()
     qDebug() << "NewConnection";
     // Получаем сокет, подключённый к серверу
     localSocket = localServer->nextPendingConnection();
+
     // Соединяем сигнал отключения сокета с обработчиком удаления сокета
-
     connect(localSocket, SIGNAL(disconnected()), localSocket, SLOT(deleteLater()));
-    // Соединяем сигнал сокета о готовности передачи данных с обработчиком данных
 
+    // Соединяем сигнал сокета о готовности передачи данных с обработчиком данных
     connect(localSocket, SIGNAL(readyRead()), this, SLOT(slotReadClient()));
+
     server_status = localSocket->isValid();
-    // Отправляем информацию клиенту о соединении с сервером
+    // можно отправить информацию клиенту о соединении с сервером
     //    sendToClient(localSocket, "Server response: Connected!");
 }
 
 // Слот чтения информации от клиента
 void CommunicationMaster::slotReadClient()
 {
-    qDebug() << "slotReadClient";
+
     // Получаем QLocalSocket после срабатывания сигнала о готовности передачи данных
     localSocket = (QLocalSocket*)sender();
 
-    if(localSocket->isValid()){
-
-        qDebug() << localSocket;
-
+    if(localSocket->isValid())
+    {
         QByteArray inArray = localSocket->readAll();
-
-        qDebug() << sizeof(inArray);
 
         temp.imageQ = QImage::fromData(inArray, "PNG");
 
-        //        const auto resSaved = imageQ.save("D:/0.png");
-
         qDebug() << sizeof(temp.imageQ) << "READED IMAGE";
 
-        nMaster.TF_processing(false, temp.imageQ);
+        temp.outString = nMaster.TF_processing(false, temp.imageQ);
+
+        sendToClient(localSocket, temp.outString);
     }
 }
 
-// Метод для отправки клиенту подтверждения о приёме информации
 void CommunicationMaster::sendToClient(QLocalSocket* localSocket, QString stringIn)
 {
     qDebug() << localSocket->isValid();
