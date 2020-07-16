@@ -3,6 +3,8 @@
 #include "include/NeuronetMaster.h"
 #define slots
 
+#define NP_ARR
+
 NeuronetMaster::NeuronetMaster() : QObject(nullptr)
 {
     qInfo() << "TF_using";
@@ -117,6 +119,7 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                 "print('TF_PROCESSIVNG')	\n"\
                 "start_time = datetime.now()	\n"\
                 );
+#ifdef NP_ARR
     if(!init)
     {
         // если не инициализация, то раскладываем кадр и отправляем в словарь Python
@@ -135,6 +138,16 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                     "image = img	\n"\
                     );
     }
+#else
+    if(!init)
+    {
+        const auto resSaved = imageQ.save("D:/0.png");
+        PyRun_SimpleString(
+                    "image = cv2.imread('D:/0.png')	\n"\
+                    );
+
+    }
+#endif
     else
     {
         PyRun_SimpleString(
