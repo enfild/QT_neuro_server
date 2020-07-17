@@ -54,6 +54,8 @@ void CommunicationMaster::slotReadClient()
 
         temp.outString = nMaster.TF_processing(false, temp.imageQ);
 
+        qInfo() << temp.outString << "OUTSTRING";
+
         sendToClient(localSocket, temp.outString);
     }
 }
@@ -66,6 +68,9 @@ void CommunicationMaster::sendToClient(QLocalSocket* localSocket, QString string
 
     localSocket->write(baString);
 
+    localSocket->waitForBytesWritten();
+
+    qDebug() << "ZAPISAL";
 }
 
 void CommunicationMaster::sleep()

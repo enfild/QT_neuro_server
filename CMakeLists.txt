@@ -19,10 +19,14 @@ INCLUDE_DIRECTORIES(
 #LINK_DIRECTORIES($ENV{PYTHON37}/libs)
 # PTH to LIB of python for neuronet
 link_libraries(C:/Users/qwert/AppData/Local/Programs/Python/Python37/libs/python37.lib)
+link_libraries(C:/Users/qwert/AppData/Local/Programs/Python/Python37/libs/python37_d.lib)
 
 find_package(Qt5 REQUIRED Core Gui Network)
 
 find_package(OpenCV REQUIRED)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/utils
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(NeuronetMaster
   main.cpp
@@ -31,7 +35,6 @@ add_executable(NeuronetMaster
   include/CommunicationMaster.h
   include/NeuronetMaster.h
 )
-#qt5_use_modules(NavigationServerTest Core Network Test)
 
 target_link_libraries(NeuronetMaster Qt5::Core)
 target_link_libraries(NeuronetMaster Qt5::Gui)
