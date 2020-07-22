@@ -7,11 +7,10 @@ CommunicationMaster::CommunicationMaster(QString serverName) : QObject(nullptr)
     localServer = new QLocalServer(this);
     if(!localServer->listen(serverName))
     {
-        qWarning() << "BAAAAAAAAD";
+        qWarning() << "FALSE LISTEN SERVER";
         localServer->close();
         return;
     }
-    qDebug() << "ZAEBAL" << serverName;
 
     QObject::connect(localServer, SIGNAL(newConnection()), this, SLOT(slotNewConnection()));
 
@@ -46,15 +45,10 @@ void CommunicationMaster::slotReadClient()
 
     if(localSocket->isValid())
     {
-        QByteArray inArray = localSocket->readAll();
 
-        temp.imageQ = QImage::fromData(inArray, "PNG");
+        temp.imageBA = localSocket->readAll();
 
-        qDebug() << sizeof(temp.imageQ) << "READED IMAGE";
-
-        temp.outString = nMaster.TF_processing(false, temp.imageQ);
-
-        qInfo() << temp.outString << "OUTSTRING";
+        temp.outString = nMaster.TF_processing(false, temp.imageBA);
 
         sendToClient(localSocket, temp.outString);
     }
@@ -62,15 +56,10 @@ void CommunicationMaster::slotReadClient()
 
 void CommunicationMaster::sendToClient(QLocalSocket* localSocket, QString stringIn)
 {
-    qDebug() << localSocket->isValid();
 
     QByteArray baString = stringIn.toUtf8();
 
     localSocket->write(baString);
-
-    localSocket->waitForBytesWritten();
-
-    qDebug() << "ZAPISAL";
 }
 
 void CommunicationMaster::sleep()

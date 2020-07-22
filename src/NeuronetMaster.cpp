@@ -71,8 +71,6 @@ void NeuronetMaster::TF_init()
                 "from utils import visualization_utils as vis_util	\n"\
                 );
 
-    qInfo() << "INIT TF DONE!";
-
     PyRun_SimpleString(
                 "MODEL_NAME = 'inference_graph'	\n"\
                 "CWD_PATH = 'C:/neuronet/object_detection'	\n"\
@@ -84,13 +82,13 @@ void NeuronetMaster::TF_init()
                 "label_map = label_map_util.load_labelmap(PATH_TO_LABELS)	\n"\
                 "categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes = NUM_CLASSES, use_display_name = True)	\n"\
                 "category_index = label_map_util.create_category_index(categories)	\n"
-                "tf.device('device:GPU:0')	\n"\
+
                 "config = tf.ConfigProto()	\n"\
                 "config.gpu_options.visible_device_list= '0'	\n"\
                 "config.gpu_options.per_process_gpu_memory_fraction = 0.4	\n"\
                 "sess = tf.Session(config = config)	\n"\
+
                 "detection_graph = tf.Graph()	\n"\
-                "print('READY TO RAD GRAPH')	\n"\
                 "detection_graph = tf.Graph()	\n"\
                 "with detection_graph.as_default() :	\n"\
                 "	od_graph_def = tf.GraphDef()	\n"\
@@ -105,33 +103,29 @@ void NeuronetMaster::TF_init()
                 "detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')	\n"\
                 "num_detections = detection_graph.get_tensor_by_name('num_detections:0')	\n"\
                 );
-    QImage image;
-    NeuronetMaster::TF_processing(true, image);
+    QByteArray imageBA;
+	
+    NeuronetMaster::TF_processing(true, imageBA);
 
-    qInfo() << "INIT GRAPH DONE";
 }
 
-QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
+QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 {
-
-    qDebug() << sizeof(imageQ) << "TF_PROCESSING";
-    PyRun_SimpleString(
-                "print('TF_PROCESSIVNG')	\n"\
-                "start_time = datetime.now()	\n"\
-                );
+	
 #ifdef NP_ARR
     if(!init)
     {
         // если не инициализация, то раскладываем кадр и отправляем в словарь Python
-        QByteArray bytesImages;
-        QBuffer buffer(&bytesImages);
-        buffer.open(QIODevice::WriteOnly);
-        imageQ.save(&buffer, "png");
-        // перевод байтового массива в байтовый обьект
-        imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(bytesImages.data()), static_cast<Py_ssize_t>(bytesImages.size()));
+		// QByteArray bytesImages;
+		// QBuffer buffer(&bytesImages);
+		// buffer.open(QIODevice::WriteOnly);
+		// imageQ.save(&buffer, "png");
+		
+        // перевод байтового массива в байтовый обьект, затем в словарь
+        imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(imageBA.data()), static_cast<Py_ssize_t>(imageBA.size()));
 
         int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
-
+		
         PyRun_SimpleString(
                     "np_image = np.frombuffer(imagePy, dtype = np.uint8)    \n"\
                     "img = cv2.imdecode(np_image, cv2.IMREAD_COLOR) \n"\
@@ -146,6 +140,9 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                     "image = cv2.imread('D:/0.png')	\n"\
                     );
 
+		PyRun_SimpleString("print('TIME FOR READ')");
+		PyRun_SimpleString("print(datetime.now() - start_time)");
+
     }
 #endif
     else
@@ -157,7 +154,6 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
     PyRun_SimpleString(
                 "image = cv2.resize(image, (1024, 1024))	\n"\
                 "image_expanded = np.expand_dims(image, axis = 0)	\n"\
-                "print(datetime.now() - start_time)	\n"\
                 "(boxes, scores, classes, num) = sess.run(	\n"\
                 "	[detection_boxes, detection_scores, detection_classes, num_detections],	\n"\
                 "	feed_dict = { image_tensor: image_expanded })	\n"\
@@ -178,11 +174,10 @@ QString NeuronetMaster::TF_processing(bool init, QImage imageQ)
                 "			end_point = (int(xmax * height), int(ymax * width))	\n"\
                 "			color = (0, 255, 0)	\n"\
                 "			center_coordinates = (int((xmax*height + xmin*height) / 2), int((ymax*width + ymin*width) / 2))	\n"\
-                "			print(center_coordinates)	\n"\
                 "			image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
                 "			listCoordinates.append(center_coordinates)	\n"\
-                "print(listCoordinates)	\n"\
                 );
+	
     //получение обьекта из словаря
     translation = PyDict_GetItemString(main_dict, "listCoordinates");
 
@@ -199,8 +194,6 @@ void NeuronetMaster::Shower()
     PyRun_SimpleString(
                 "NumbFrame += 1	\n"\
                 "cv2.imshow('GUI', image)	\n"\
-                "print('PROCESSING IS DONE')	\n"\
-                "print(datetime.now() - start_time)	\n"\
                 );
 }
 
@@ -212,7 +205,6 @@ QString NeuronetMaster::pointReader(PyObject *ItemString)
     QByteArray bytesPoints = PyBytes_AS_STRING(outString);
     QString out = QString::fromUtf8(bytesPoints);
 
-    qDebug() << out << "POINT READER";
     return out;
 }
 
@@ -230,7 +222,6 @@ QString NeuronetMaster::parserString(QString inString)
     {
         x = inString.split(",")[0 + i].toInt();
         y = inString.split(",")[1 + i].toInt();
-        qDebug() << y;
     }
     return inString;
 }

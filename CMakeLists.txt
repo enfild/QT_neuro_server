@@ -11,6 +11,13 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+#set(MSVC_BUILDSYSTEM MSVC AND NOT ${CMAKE_MAKE_PROGRAM} STREQUAL "nmake")
+#if(MSVC_BUILDSYSTEM)
+#    set(INSTALLER_DIR ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>)
+#else()
+#    set(INSTALLER_DIR ${CMAKE_CURRENT_BINARY_DIR})
+#endif()
+
 INCLUDE_DIRECTORIES(
     $ENV{PYTHON37}/include
     E:/tools/opencv/build/include
@@ -19,6 +26,9 @@ INCLUDE_DIRECTORIES(
 #LINK_DIRECTORIES($ENV{PYTHON37}/libs)
 # PTH to LIB of python for neuronet
 link_libraries(C:/Users/qwert/AppData/Local/Programs/Python/Python37/libs/python37.lib)
+
+
+
 link_libraries(C:/Users/qwert/AppData/Local/Programs/Python/Python37/libs/python37_d.lib)
 
 find_package(Qt5 REQUIRED Core Gui Network)

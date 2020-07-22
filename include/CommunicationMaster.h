@@ -30,7 +30,7 @@ public:
         int id;
 
         /// \ изображение для общзения с другим классом
-        QImage imageQ;
+        QByteArray imageBA;
 
         /// \ выходные данные
         QString outString;

@@ -5,6 +5,7 @@
 //#define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #define slots
+
 #include <QDebug>
 #include <QObject>
 #include <QEventLoop>
@@ -14,6 +15,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include <QBuffer>
+#include <QString>
 
 namespace  {
 // колво катетеров
@@ -44,7 +46,7 @@ public:
 public slots:
 
     /// \ Обработка кадра инструментами Питона
-    QString TF_processing(bool init, QImage imageQ);
+    QString TF_processing(bool init, QByteArray);
 
 private:
     PyObject *pModule; //create main module
