@@ -60,137 +60,128 @@ void NeuronetMaster::TF_init()
 {
     qInfo() << "START PY_INIT";
 
-    PyRun_SimpleString(
-                "import os	\n"\
-                "import sys	\n"\
-                "import cv2	\n"\
-                "import numpy as np	\n"\
-                "import tensorflow as tf	\n"\
-                "from datetime import datetime	\n"\
-                "from utils import label_map_util	\n"\
-				"from utils import ops as utils_ops	\n"\
-                "from utils import visualization_utils as vis_util	\n"\
-                );
-
-    PyRun_SimpleString(
-                "MODEL_NAME = 'inference_graph/saved_model'	\n"\
-                "CWD_PATH = 'C:/neuronet/object_detection'	\n"\
-                "PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME)	\n"\
-                "PATH_TO_LABELS = os.path.join(CWD_PATH, 'data', 'object-detection.pbtxt')	\n"\
-                "PATH_TO_IMAGE_EX = 'C:/neuronet/Example_frame/0.png'	\n"\
-                "NUM_CLASSES = 2	\n"\
-                "NumbFrame = 0	\n"\
-                "category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)	\n"
-
-                );
 	PyRun_SimpleString(
-		"detection_model = tf.saved_model.load(str(PATH_TO_CKPT))	\n"\
-
-		"def run_inference_for_single_image(model, image) :\n"\
-		"	image = np.asarray(image)	\n"\
-		"	input_tensor = tf.convert_to_tensor(image)	\n"\
-		"	input_tensor = input_tensor[tf.newaxis, ...]	\n"\
-		"	output_dict = model(input_tensor)	\n"\
-		"	num_detections = int(output_dict.pop('num_detections'))	\n"\
-		"	output_dict = { key: value[0,:num_detections].numpy()	\n"\
-		"					for key, value in output_dict.items() }	\n"\
-		"	output_dict['num_detections'] = num_detections	\n"\
-		"	output_dict['detection_classes'] = output_dict['detection_classes'].astype(np.int64)	\n"\
-		"	if 'detection_masks' in output_dict :	\n"\
-		"		detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(	\n"\
-		"									output_dict['detection_masks'], output_dict['detection_boxes'],	\n"\
-		"									image.shape[0], image.shape[1])	\n"\
-		"		detection_masks_reframed = tf.cast(detection_masks_reframed > 0.5, tf.uint8)	\n"\
-		"		output_dict['detection_masks_reframed'] = detection_masks_reframed.numpy()	\n"\
-		"	return output_dict	\n"\
-
-		"def run_inference(model, category_index, image) :	\n"\
-		"	output_dict = run_inference_for_single_image(model, image)	\n"\
-		"	scores = np.squeeze(output_dict['detection_scores'])	\n"\
-		"	boxes = np.squeeze(output_dict['detection_boxes'])	\n"\
-		"	classes = np.squeeze(output_dict['detection_classes'])	\n"\
-		"	max_boxes_to_draw = boxes.shape[0]	\n"\
-		"	height = image.shape[0]	\n"\
-		"	width = image.shape[1]	\n"\
-		"	channels = image.shape[2]	\n"\
-		"	listCoordinates = []	\n"\
-		"	for i in range(min(max_boxes_to_draw, boxes.shape[0])) :	\n"\
-		"		if scores is None or scores[i] > 0.5:	\n"\
-		"			if classes[i] == 2 :	\n"\
-		"				box = tuple(boxes[i].tolist())	\n"\
-		"				ymin, xmin, ymax, xmax = box	\n"\
-		"				start_point = (int(xmin*height), int(ymin*width))	\n"\
-		"				end_point = (int(xmax*height), int(ymax*width))	\n"\
-		"				color = (0, 255, 20)	\n"\
-		"				center_coordinates = int((xmax*height + xmin*height) / 2), int((ymax*width + ymin*width) / 2)	\n"\
-		"				print(center_coordinates)	\n"\
-		"				image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
-		"				listCoordinates.append(center_coordinates)	\n"\
+		"import os	\n"\
+		"import sys	\n"\
+		"import cv2	\n"\
+		"import numpy as np	\n"\
+		"import tensorflow as tf	\n"\
+		"from datetime import datetime	\n"\
+		"from utils import label_map_util	\n"\
+		"from utils import visualization_utils as vis_util	\n"\
 	);
-    QByteArray imageBA;
-	
-    NeuronetMaster::TF_processing(true, imageBA);
+
+	PyRun_SimpleString(
+		"MODEL_NAME = 'inference_graph'	\n"\
+		"CWD_PATH = 'C:/neuronet/object_detection'	\n"\
+		"PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, 'frozen_inference_graph.pb')	\n"\
+		"PATH_TO_LABELS = os.path.join(CWD_PATH, 'data', 'object-detection.pbtxt')	\n"\
+		"PATH_TO_IMAGE_EX = 'C:/neuronet/Example_frame/0.png'	\n"\
+		"NUM_CLASSES = 2	\n"\
+		"NumbFrame = 0	\n"\
+
+		"label_map = label_map_util.load_labelmap(PATH_TO_LABELS)	\n"\
+		"categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes = NUM_CLASSES, use_display_name = True)	\n"\
+		"category_index = label_map_util.create_category_index(categories)	\n"
+
+		"detection_graph = tf.Graph()	\n"\
+		"with detection_graph.as_default() :	\n"\
+		"	od_graph_def = tf.compat.v1.GraphDef()	\n"\
+		"	with tf.io.gfile.GFile(PATH_TO_CKPT, 'rb') as fid :	\n"\
+		"		serialized_graph = fid.read()	\n"\
+		"		od_graph_def.ParseFromString(serialized_graph)	\n"\
+		"		tf.import_graph_def(od_graph_def, name = '')	\n"\
+		"	sess = tf.compat.v1.Session(graph = detection_graph)	\n"\
+		"image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')	\n"\
+		"detection_boxes = detection_graph.get_tensor_by_name('detection_boxes:0')	\n"\
+		"detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')	\n"\
+		"detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')	\n"\
+		"num_detections = detection_graph.get_tensor_by_name('num_detections:0')	\n"\
+	);
+	QByteArray imageBA;
+
+	NeuronetMaster::TF_processing(true, imageBA);
 
 }
 
 QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 {
-	
+
 #ifdef NP_ARR
-    if(!init)
-    {
-        // если не инициализация, то раскладываем кадр и отправляем в словарь Python
+	if (!init)
+	{
+		// если не инициализация, то раскладываем кадр и отправляем в словарь Python
 		// QByteArray bytesImages;
 		// QBuffer buffer(&bytesImages);
 		// buffer.open(QIODevice::WriteOnly);
 		// imageQ.save(&buffer, "png");
-		
-        // перевод байтового массива в байтовый обьект, затем в словарь
-        imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(imageBA.data()), static_cast<Py_ssize_t>(imageBA.size()));
 
-        int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
-		
-        PyRun_SimpleString(
-                    "np_image = np.frombuffer(imagePy, dtype = np.uint8)    \n"\
-                    "img = cv2.imdecode(np_image, cv2.IMREAD_COLOR) \n"\
-                    "image = img	\n"\
-                    );
-    }
+		// перевод байтового массива в байтовый обьект, затем в словарь
+		imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(imageBA.data()), static_cast<Py_ssize_t>(imageBA.size()));
+
+		int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
+
+		PyRun_SimpleString(
+			"np_image = np.frombuffer(imagePy, dtype = np.uint8)    \n"\
+			"img = cv2.imdecode(np_image, cv2.IMREAD_COLOR) \n"\
+			"image = img	\n"\
+		);
+	}
 #else
-    if(!init)
-    {
-        const auto resSaved = imageQ.save("D:/0.png");
-        PyRun_SimpleString(
-                    "image = cv2.imread('D:/0.png')	\n"\
-                    );
+	if (!init)
+	{
+		const auto resSaved = imageQ.save("D:/0.png");
+		PyRun_SimpleString(
+			"image = cv2.imread('D:/0.png')	\n"\
+		);
 
 		PyRun_SimpleString("print('TIME FOR READ')");
 		PyRun_SimpleString("print(datetime.now() - start_time)");
 
-    }
+	}
 #endif
-    else
-    {
-        PyRun_SimpleString(
-                    "image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
-                    );
-    }
-    PyRun_SimpleString(
-                "start_time = datetime.now()	\n"\
-                "run_inference(detection_model, category_index, image)	\n"\
-                "print(datetime.now() - start_time)	\n"\
-		
-                );
-	
-    //получение обьекта из словаря
-    translation = PyDict_GetItemString(main_dict, "listCoordinates");
+	else
+	{
+		PyRun_SimpleString(
+			"image = cv2.imread(PATH_TO_IMAGE_EX)	\n"\
+		);
+	}
+	PyRun_SimpleString(
+		"image = cv2.resize(image, (1024, 1024))	\n"\
+		"image_expanded = np.expand_dims(image, axis = 0)	\n"\
+		"(boxes, scores, classes, num) = sess.run(	\n"\
+		"	[detection_boxes, detection_scores, detection_classes, num_detections],	\n"\
+		"	feed_dict = { image_tensor: image_expanded })	\n"\
+		"scores = np.squeeze(scores)	\n"\
+		"boxes = np.squeeze(boxes)	\n"\
+		"classes = np.squeeze(classes)	\n"\
+		"max_boxes_to_draw = boxes.shape[0]	\n"\
+		"height = image.shape[0]	\n"\
+		"width = image.shape[1]	\n"\
+		"channels = image.shape[2]	\n"\
+		"listCoordinates = []	\n"\
+		"for i in range(min(max_boxes_to_draw, boxes.shape[0])) :	\n"\
+		"	if scores is None or scores[i] > 0.5:	\n"\
+		"		if classes[i] == 2 :	\n"\
+		"			box = tuple(boxes[i].tolist())	\n"\
+		"			ymin, xmin, ymax, xmax = box	\n"\
+		"			start_point = (int(xmin * height), int(ymin * width))	\n"\
+		"			end_point = (int(xmax * height), int(ymax * width))	\n"\
+		"			color = (0, 255, 0)	\n"\
+		"			center_coordinates = (int((xmax*height + xmin*height) / 2), int((ymax*width + ymin*width) / 2))	\n"\
+		"			image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
+		"			listCoordinates.append(center_coordinates)	\n"\
+	);
 
-    points = pointReader(translation);
-    finString = parserString(points);
+	//получение обьекта из словаря
+	translation = PyDict_GetItemString(main_dict, "listCoordinates");
 
-    Shower();
+	points = pointReader(translation);
+	finString = parserString(points);
 
-    return finString;
+	Shower();
+
+	return finString;
 }
 
 void NeuronetMaster::Shower()
