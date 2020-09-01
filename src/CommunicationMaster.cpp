@@ -43,14 +43,20 @@ void CommunicationMaster::slotReadClient()
     // Получаем QLocalSocket после срабатывания сигнала о готовности передачи данных
     localSocket = (QLocalSocket*)sender();
 
-    if(localSocket->isValid())
-    {
+	if (localSocket->isValid())
+	{
 
-        temp.imageBA = localSocket->readAll();
+		temp.imageBA = localSocket->readAll();
 
-        temp.outString = nMaster.TF_processing(false, temp.imageBA);
-
-        sendToClient(localSocket, temp.outString);
+		temp.outString = nMaster.TF_processing(false, temp.imageBA);
+		if (temp.outString != "") 
+		{
+		sendToClient(localSocket, temp.outString);
+		}
+		else
+		{
+			sendToClient(localSocket, "Empty");
+		}
     }
 }
 
