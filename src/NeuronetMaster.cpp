@@ -84,6 +84,9 @@ void NeuronetMaster::TF_init()
 		"categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes = NUM_CLASSES, use_display_name = True)	\n"\
 		"category_index = label_map_util.create_category_index(categories)	\n"
 
+		"config = tf.compat.v1.ConfigProto()	\n"\
+		"config.gpu_options.allow_growth = True	\n"\
+
 		"detection_graph = tf.Graph()	\n"\
 		"with detection_graph.as_default() :	\n"\
 		"	od_graph_def = tf.compat.v1.GraphDef()	\n"\
@@ -91,7 +94,7 @@ void NeuronetMaster::TF_init()
 		"		serialized_graph = fid.read()	\n"\
 		"		od_graph_def.ParseFromString(serialized_graph)	\n"\
 		"		tf.import_graph_def(od_graph_def, name = '')	\n"\
-		"	sess = tf.compat.v1.Session(graph = detection_graph)	\n"\
+		"	sess = tf.compat.v1.Session(graph = detection_graph, config = config)	\n"\
 		"image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')	\n"\
 		"detection_boxes = detection_graph.get_tensor_by_name('detection_boxes:0')	\n"\
 		"detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')	\n"\
@@ -122,9 +125,12 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 		int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
 
 		PyRun_SimpleString(
+			"start_time = datetime.now()	\n"\
 			"np_image = np.frombuffer(imagePy, dtype = np.uint8)    \n"\
 			"img = cv2.imdecode(np_image, cv2.IMREAD_COLOR) \n"\
 			"image = img	\n"\
+			"print('TIME FOR READ')	\n"\
+			"print(datetime.now() - start_time)	\n"\
 		);
 	}
 #else
@@ -171,6 +177,7 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 		"			center_coordinates = (int((xmax*height + xmin*height) / 2), int((ymax*width + ymin*width) / 2))	\n"\
 		"			image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
 		"			listCoordinates.append(center_coordinates)	\n"\
+		"print(datetime.now() - start_time)	\n"\
 	);
 
 	//получение обьекта из словаря
