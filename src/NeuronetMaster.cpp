@@ -85,7 +85,10 @@ void NeuronetMaster::TF_init()
 		"category_index = label_map_util.create_category_index(categories)	\n"
 
 		"config = tf.compat.v1.ConfigProto()	\n"\
-		"config.gpu_options.allow_growth = True	\n"\
+
+		//"config.gpu_options.allow_growth = True	\n"\
+
+		"config.gpu_options.per_process_gpu_memory_fraction = 0.4	\n"\
 
 		"detection_graph = tf.Graph()	\n"\
 		"with detection_graph.as_default() :	\n"\
