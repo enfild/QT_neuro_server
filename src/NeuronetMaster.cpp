@@ -77,7 +77,7 @@ void NeuronetMaster::TF_init()
 		"PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, 'frozen_inference_graph.pb')	\n"\
 		"PATH_TO_LABELS = os.path.join(CWD_PATH, 'data', 'object-detection.pbtxt')	\n"\
 		"PATH_TO_IMAGE_EX = 'C:/neuronet/Example_frame/0.png'	\n"\
-		"NUM_CLASSES = 2	\n"\
+		"NUM_CLASSES = 3	\n"\
 		"NumbFrame = 0	\n"\
 
 		"label_map = label_map_util.load_labelmap(PATH_TO_LABELS)	\n"\
@@ -128,12 +128,9 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 		int resultImage = PyDict_SetItemString(main_dict, "imagePy", imagePy);
 
 		PyRun_SimpleString(
-			"start_time = datetime.now()	\n"\
 			"np_image = np.frombuffer(imagePy, dtype = np.uint8)    \n"\
 			"img = cv2.imdecode(np_image, cv2.IMREAD_COLOR) \n"\
 			"image = img	\n"\
-			"print('TIME FOR READ')	\n"\
-			"print(datetime.now() - start_time)	\n"\
 		);
 	}
 #else
@@ -145,7 +142,6 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 		);
 
 		PyRun_SimpleString("print('TIME FOR READ')");
-		PyRun_SimpleString("print(datetime.now() - start_time)");
 
 	}
 #endif
@@ -170,8 +166,8 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 		"channels = image.shape[2]	\n"\
 		"listCoordinates = []	\n"\
 		"for i in range(min(max_boxes_to_draw, boxes.shape[0])) :	\n"\
-		"	if scores is None or scores[i] > 0.5:	\n"\
-		"		if classes[i] == 2 :	\n"\
+		"	if scores is None or scores[i] > 0.7:	\n"\
+		"		if classes[i] == 3 :	\n"\
 		"			box = tuple(boxes[i].tolist())	\n"\
 		"			ymin, xmin, ymax, xmax = box	\n"\
 		"			start_point = (int(xmin * height), int(ymin * width))	\n"\
@@ -180,7 +176,6 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 		"			center_coordinates = (int((xmax*height + xmin*height) / 2), int((ymax*width + ymin*width) / 2))	\n"\
 		"			image = cv2.circle(image, center_coordinates, 15, color, 3)	\n"\
 		"			listCoordinates.append(center_coordinates)	\n"\
-		"print(datetime.now() - start_time)	\n"\
 	);
 
 	//получение обьекта из словаря
@@ -226,7 +221,10 @@ QString NeuronetMaster::parserString(QString inString)
     for(int i =0; i < countCath * numCoordinates; i += numCoordinates)
     {
         x = inString.split(",")[0 + i].toInt();
+    	// необходимый перевод на разрешение исходное (при отправке обратно нужны согласованные координаты по изображению)
+		x = x / procImageResolution * rawImageResolution;
         y = inString.split(",")[1 + i].toInt();
+		y = y / procImageResolution * rawImageResolution;
     }
     return inString;
 }

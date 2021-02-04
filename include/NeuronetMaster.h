@@ -18,12 +18,14 @@
 #include <QString>
 
 namespace  {
-// колво катетеров
-int countCath;
-// координаты катетера
-const int numCoordinates = 2;
-int x;
-int y;
+	// колво катетеров
+	int countCath;
+	// координаты катетера
+	const int numCoordinates = 2;
+	int x;
+	int y;
+	int procImageResolution = 1024;
+	int rawImageResolution = 976;
 }
 
 namespace  {
