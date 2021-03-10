@@ -17,20 +17,17 @@
 #include <QBuffer>
 #include <QString>
 
-namespace  {
-	// колво катетеров
-	int countCath;
-	// координаты катетера
-	const int numCoordinates = 2;
-	int x;
-	int y;
-	int procImageResolution = 1024;
-	int rawImageResolution = 976;
-}
-
-namespace  {
-
-}
+struct cathStruct
+{
+    // колво катетеров
+    int countCath;
+    // координаты катетера
+    const int numCoordinates = 2;
+    int x;
+    int y;
+    const float procImageResolution = 1024;
+    const float rawImageResolution = 976;
+};
 
 class NeuronetMaster: public QObject
 {

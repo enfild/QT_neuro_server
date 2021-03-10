@@ -116,12 +116,6 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 #ifdef NP_ARR
 	if (!init)
 	{
-		// если не инициализация, то раскладываем кадр и отправляем в словарь Python
-		// QByteArray bytesImages;
-		// QBuffer buffer(&bytesImages);
-		// buffer.open(QIODevice::WriteOnly);
-		// imageQ.save(&buffer, "png");
-
 		// перевод байтового массива в байтовый обьект, затем в словарь
 		imagePy = PyBytes_FromStringAndSize(reinterpret_cast<const char*>(imageBA.data()), static_cast<Py_ssize_t>(imageBA.size()));
 
@@ -180,10 +174,8 @@ QString NeuronetMaster::TF_processing(bool init, QByteArray imageBA)
 
 	//получение обьекта из словаря
 	translation = PyDict_GetItemString(main_dict, "listCoordinates");
-
 	points = pointReader(translation);
 	finString = parserString(points);
-
 	Shower();
 
 	return finString;
@@ -214,19 +206,23 @@ QString NeuronetMaster::parserString(QString inString)
     inString.chop(1);
     inString.remove(QRegExp("[()]+"));
 
-    qDebug() << inString << "CROPED STRING";
-    countCath = inString.split(",").count() / numCoordinates;
-    qDebug() << countCath << "колво катетеров";
+    cathStruct cathStruct;
+    cathStruct.countCath = inString.split(",").count() / cathStruct.numCoordinates;
+    QString outString;
 
-    for(int i =0; i < countCath * numCoordinates; i += numCoordinates)
+    for(int i = 0; i < cathStruct.countCath * cathStruct.numCoordinates; i += cathStruct.numCoordinates)
     {
-        x = inString.split(",")[0 + i].toInt();
+        cathStruct.x = inString.split(",")[i].toInt();
     	// необходимый перевод на разрешение исходное (при отправке обратно нужны согласованные координаты по изображению)
-		x = x / procImageResolution * rawImageResolution;
-        y = inString.split(",")[1 + i].toInt();
-		y = y / procImageResolution * rawImageResolution;
+		float outX = cathStruct.x / cathStruct.procImageResolution * cathStruct.rawImageResolution;
+        outString.append(QString::number((int)outX));
+        outString.append(",");
+        cathStruct.y = inString.split(",")[++i].toInt();
+		float outY = cathStruct.y / cathStruct.procImageResolution * cathStruct.rawImageResolution;
+        outString.append(QString::number((int)outY));
     }
-    return inString;
+    qDebug() << outString;
+    return outString;
 }
 
 inline cv::Mat QImageToCvMat(const QImage &inImage, bool inCloneImageData = true)
